@@ -1,13 +1,12 @@
 package com.cydeo.service.impl;
 
 import com.cydeo.client.ProjectClient;
+import com.cydeo.client.TaskClient;
 import com.cydeo.dto.ProjectResponse;
+import com.cydeo.dto.TaskResponse;
 import com.cydeo.dto.UserDTO;
 import com.cydeo.entity.User;
-import com.cydeo.exception.ProjectCountNotRetrievedException;
-import com.cydeo.exception.UserAlreadyExistsException;
-import com.cydeo.exception.UserCanNotBeDeletedException;
-import com.cydeo.exception.UserNotFoundException;
+import com.cydeo.exception.*;
 import com.cydeo.repository.UserRepository;
 import com.cydeo.service.KeycloakService;
 import com.cydeo.service.UserService;
@@ -28,15 +27,17 @@ public class UserServiceImpl implements UserService {
     private final MapperUtil mapperUtil;
     private final KeycloakService keycloakService;
     private final ProjectClient projectClient;
+    private final TaskClient taskClient;
 
     public UserServiceImpl(UserRepository userRepository,
                            MapperUtil mapperUtil,
                            KeycloakService keycloakService,
-                           ProjectClient projectClient) {
+                           ProjectClient projectClient, TaskClient taskClient) {
         this.userRepository = userRepository;
         this.mapperUtil = mapperUtil;
         this.keycloakService = keycloakService;
         this.projectClient = projectClient;
+        this.taskClient = taskClient;
     }
 
     @Override
@@ -153,11 +154,18 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkEmployeeConnections(String username) {
-
-        //TODO Get the needed information from task-service
-
+        Integer taskCount = 0;
+        ResponseEntity<TaskResponse> taskResponse = taskClient.getNonCompletedCountByAssignedEmployee(username);
+        if (Objects.requireNonNull(taskResponse.getBody()).isSuccess()) {
+            taskCount = taskResponse.getBody().getData();
+        } else {
+            throw new TaskCountNotRetrievedException("Task count can not be retrieved");
+        }
+        if (taskCount > 0) {
+            throw new UserCanNotBeDeletedException("User can not be deleted, because still have task(s)");
+        }
     }
 
-    //TODO Extract the authorization token from the original request and add it to the request sent to next microservice
+//TODO Extract the authorization token from the original request and add it to the request sent to next microservice
 
 }
