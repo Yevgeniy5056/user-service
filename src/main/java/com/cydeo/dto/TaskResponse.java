@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProjectResponse {
+public class TaskResponse {
 
     private boolean success;
 
@@ -19,5 +19,4 @@ public class ProjectResponse {
     private String message;
 
     private Integer data;
-
 }
