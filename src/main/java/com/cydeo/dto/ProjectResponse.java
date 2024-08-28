@@ -15,5 +15,5 @@ public class ProjectResponse {
     private boolean success;
     private HttpStatus statusCode;
     private String message;
-    private Object data;
+    private Integer data;
 }
