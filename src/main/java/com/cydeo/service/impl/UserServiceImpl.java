@@ -1,17 +1,23 @@
 package com.cydeo.service.impl;
 
+import com.cydeo.client.ProjectClient;
+import com.cydeo.dto.ProjectResponse;
 import com.cydeo.dto.UserDTO;
 import com.cydeo.entity.User;
+import com.cydeo.exception.ProjectCountNotRetrievedException;
 import com.cydeo.exception.UserAlreadyExistsException;
+import com.cydeo.exception.UserCanNotBeDeletedException;
 import com.cydeo.exception.UserNotFoundException;
 import com.cydeo.repository.UserRepository;
 import com.cydeo.service.KeycloakService;
 import com.cydeo.service.UserService;
 import com.cydeo.util.MapperUtil;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,11 +27,16 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MapperUtil mapperUtil;
     private final KeycloakService keycloakService;
+    private final ProjectClient projectClient;
 
-    public UserServiceImpl(UserRepository userRepository, MapperUtil mapperUtil, KeycloakService keycloakService) {
+    public UserServiceImpl(UserRepository userRepository,
+                           MapperUtil mapperUtil,
+                           KeycloakService keycloakService,
+                           ProjectClient projectClient) {
         this.userRepository = userRepository;
         this.mapperUtil = mapperUtil;
         this.keycloakService = keycloakService;
+        this.projectClient = projectClient;
     }
 
     @Override
@@ -129,9 +140,16 @@ public class UserServiceImpl implements UserService {
     }
 
     private void checkManagerConnections(String username) {
-
-        //TODO Get the needed information from project-service
-
+        Integer projectCount = 0;
+        ResponseEntity<ProjectResponse> projectResponse = projectClient.getNonCompletedCountByAssignedManager(username);
+        if (Objects.requireNonNull(projectResponse.getBody()).isSuccess()) {
+            projectCount = projectResponse.getBody().getData();
+        } else {
+            throw new ProjectCountNotRetrievedException("Project count can not be retrieved");
+        }
+        if (projectCount > 0) {
+            throw new UserCanNotBeDeletedException("User can not be deleted, because still have project(s)");
+        }
     }
 
     private void checkEmployeeConnections(String username) {
