@@ -10,4 +10,6 @@ public interface KeycloakService {
 
     void delete(String userName);
 
+    String getAccessToken();
+
 }
