@@ -142,8 +142,7 @@ public class UserServiceImpl implements UserService {
 
     private void checkManagerConnections(String username) {
         Integer projectCount = 0;
-        ResponseEntity<ProjectResponse> projectResponse = projectClient
-                .getNonCompletedCountByAssignedManager(keycloakService.getAccessToken(), username);
+        ResponseEntity<ProjectResponse> projectResponse = projectClient.getNonCompletedCountByAssignedManager(username);
         if (Objects.requireNonNull(projectResponse.getBody()).isSuccess()) {
             projectCount = projectResponse.getBody().getData();
         } else {
@@ -156,8 +155,7 @@ public class UserServiceImpl implements UserService {
 
     private void checkEmployeeConnections(String username) {
         Integer taskCount = 0;
-        ResponseEntity<TaskResponse> taskResponse = taskClient
-                .getNonCompletedCountByAssignedEmployee(keycloakService.getAccessToken(), username);
+        ResponseEntity<TaskResponse> taskResponse = taskClient.getNonCompletedCountByAssignedEmployee(username);
         if (Objects.requireNonNull(taskResponse.getBody()).isSuccess()) {
             taskCount = taskResponse.getBody().getData();
         } else {
@@ -167,7 +165,5 @@ public class UserServiceImpl implements UserService {
             throw new UserCanNotBeDeletedException("User can not be deleted, because still have task(s)");
         }
     }
-
-//TODO Extract the authorization token from the original request and add it to the request sent to next microservice
 
 }
